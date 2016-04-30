@@ -10,19 +10,19 @@ Your task is to build a plugin for WordPress. The plugin’s purpose is to fetch
 
 The following requirements apply to the plugin:
 
-* It must be possible to install and enable the plugin on a fresh installation of the latest version of WordPress without errors or other obvious problems.
+* [X] It must be possible to install and enable the plugin on a fresh installation of the latest version of WordPress without errors or other obvious problems.
 
-* The plugin must extend the base *WP_Widget* class.
+* [X] The plugin must extend the base *WP_Widget* class.
 
-* The widget type provided by the plugin must present a configuration form, allowing the site administrator to enter a personalized API key for access to the REST API, and to select how many stock price updates they wish to display in the widget.
+* [] The widget type provided by the plugin must present a configuration form, allowing the site administrator to enter a personalized API key for access to the REST API, and to select how many stock price updates they wish to display in the widget.
 
-* The widget must display stock price data fetched from the endpoint within the last 1 minute.
+* [] The widget must display stock price data fetched from the endpoint within the last 1 minute.
 
-* The plugin must use the administrator-provided API key to generate a signed hash for its requests to the endpoint (the endpoint will not return data without it).
+* [] The plugin must use the administrator-provided API key to generate a signed hash for its requests to the endpoint (the endpoint will not return data without it).
 
-* The plugin must handle any possible response from the endpoint gracefully, and may not display error messages, inaccurate information, or broken markup due to not having valid data to show.
+* [] The plugin must handle any possible response from the endpoint gracefully, and may not display error messages, inaccurate information, or broken markup due to not having valid data to show.
 
-* Both the administrator configuration form and the public widget display must use properly formatted, semantic HTML5 to render form elements and fetched data.
+* [] Both the administrator configuration form and the public widget display must use properly formatted, semantic HTML5 to render form elements and fetched data.
 
 **DOCUMENTATION**
 
