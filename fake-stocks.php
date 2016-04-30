@@ -1,6 +1,6 @@
 <?php 
 /*
-Plugin Name: Fake Stocks
+Plugin Name: Fake Stocks Quotes
 Plugin URI: https://github.com/alleyinteractive/test_project_ish
 Description: A widget that provides fake stock quotes.
 Version: 0.1
@@ -15,10 +15,10 @@ class AI_Fake_Stocks extends WP_Widget {
 	 */
 	public function __construct() {
 		$widget_ops = array( 
-			'classname' => 'my_widget',
-			'description' => 'My Widget is awesome',
+			'classname' => 'fake_stocks',
+			'description' => 'A widget that provides fake stock quotes.',
 		);
-		parent::__construct( 'my_widget', 'My Widget', $widget_ops );
+		parent::__construct( 'fake_stocks', 'Fake Stock Quotes', $widget_ops );
 	}
 
 	/**
@@ -50,4 +50,8 @@ class AI_Fake_Stocks extends WP_Widget {
 		// processes widget options to be saved
 	}
 }
+
+add_action( 'widgets_init', function(){
+	register_widget( 'AI_Fake_Stocks' );
+});
 ?>
