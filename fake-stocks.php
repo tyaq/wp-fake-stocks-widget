@@ -29,6 +29,16 @@ class AI_Fake_Stocks extends WP_Widget {
 	 */
 	public function widget( $args, $instance ) {
 		// outputs the content of the widget
+        $title = apply_filters( 'widget_title', $instance['title'] );
+        $symbols = get_quotes($instance['symbols'],$instance['number']);
+        
+        echo $args['before_widget'];
+        if ( ! empty( $title ) ) {
+            echo $args['before_title'] . $title . $args['after_title'];
+        }
+            echo '<pre>'; print_r( $symbols ); echo '</pre>';
+        echo $args['after_widget'];
+        
 	}
 
 	/**
@@ -48,10 +58,10 @@ class AI_Fake_Stocks extends WP_Widget {
         } else {
             $api_key = '';
         }
-        if ( isset( $instance['num'] ) ) {
-            $num = $instance['num'];   
+        if ( isset( $instance['number'] ) ) {
+            $number = $instance['number'];   
         } else {
-            $num = 3;
+            $number = 3;
         }
         if ( isset( $instance['symbols'] ) ) {
             $symbols = $instance['symbols'];   
@@ -70,9 +80,9 @@ class AI_Fake_Stocks extends WP_Widget {
                 '" name="' . $this->get_field_name( 'api_key' ) . '"></p>';
                 
          //Number of Stocks Field      
-         echo '<p><label for="' . $this ->get_field_id('num') . '">Number of stocks quotes to show:</label>';
-         echo '<input class="tiny-text" type="number" step="1" min="1" value="'. esc_attr( $num ) . '" size="3" id="' .
-                $this->get_field_id( 'num' ) . '" name="' . $this->get_field_name( 'num' ) . '"></p>';
+         echo '<p><label for="' . $this ->get_field_id('number') . '">Number of stocks quotes to show:</label>';
+         echo '<input class="tiny-text" type="number" step="1" min="1" value="'. esc_attr( $number ) . '" size="3" id="' .
+                $this->get_field_id( 'number' ) . '" name="' . $this->get_field_name( 'number' ) . '"></p>';
                 
          //Stock Symbols Field      
          echo '<p><label for="' . $this ->get_field_id('symbols') . '">NASDAQ ticker symbols (separated by commas):</label>';
@@ -88,9 +98,56 @@ class AI_Fake_Stocks extends WP_Widget {
 	 */
 	public function update( $new_instance, $old_instance ) {
 		// processes widget options to be saved
-        $instance['title'] = strip_tags( $new_instance['title'] );
+        $instance['title'] = sanitize_text_field( $new_instance['title'] );
+        $instance['api_key'] = sanitize_text_field( $new_instance['api_key'] );
+        $instance['number'] = sanitize_text_field( $new_instance['number'] );
+        $instance['symbols'] = sanitize_text_field( $new_instance['symbols'] );
+        return $instance;
 	}
+    
 }
+
+/**
+ * Requests ticker data from api
+ *
+ * @param string $str_symbols The admin's symbol list
+ */
+function get_quotes($str_symbols, $number) {
+    //Requests ticker data from api
+    $symbols = parse_symbols($str_symbols);
+    if (count($symbols) < $number) { // If input stock tickers are less then input number display as many as you have
+        $number = count($symbols);
+    }
+    
+    $results = []; //empty array for data
+    for ($i = 0; $i <= $NUMBER; $i++) {
+        $request = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20csv%20where%20url%3D'" .
+         "http%3A%2F%2Fdownload.finance.yahoo.com%2Fd%2Fquotes.csv%3Fs%3D" . $symbols[$i]  ."%26f%3Dsl1d1t1c1ohgv%26e%3D.csv'" .
+         "%20and%20columns%3D'symbol%2Cprice%2Cdate%2Ctime%2Cchange%2Ccol1%2Chigh%2Clow%2Ccol2'&format=json&env=store%3A%2F%2Fdatatables.org" .
+         "%2Falltableswithkeys";
+         $response = wp_remote_get( $request );
+         if( is_array($response) ) { //Error Handling
+            $header = $response['headers']; // array of http header lines
+            $body = $response['body']; // use the content
+            $json = json_decode($body);
+            $results["$i"] = [$json->{'query'}->{'results'}->{'row'}->{'symbol'},$json->{'query'}->{'results'}->{'row'}->{'price'},$json->{'query'}->{'results'}->{'row'}->{'change'}];
+          } else {
+            $results["$i"] = 'error';
+          }
+    }
+    return $results;
+    
+ }
+
+/**
+ * Parses admin forms symbols string into array of ticker symbols
+ *
+ * @param string $str_symbols The admin's symbol list
+ */
+function parse_symbols($str_symbols) {
+    //Parses admin forms symbols string into array of ticker symbols
+    return preg_split("/[^a-z^A-Z]+/", $str_symbols);
+ }
 
 add_action( 'widgets_init', function(){
 	register_widget( 'AI_Fake_Stocks' );
