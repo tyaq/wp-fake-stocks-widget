@@ -14,15 +14,15 @@ The following requirements apply to the plugin:
 
 * [X] The plugin must extend the base *WP_Widget* class.
 
-* [ ] The widget type provided by the plugin must present a configuration form, allowing the site administrator to enter a personalized API key for access to the REST API, and to select how many stock price updates they wish to display in the widget.
+* [X] The widget type provided by the plugin must present a configuration form, allowing the site administrator to enter a personalized API key for access to the REST API, and to select how many stock price updates they wish to display in the widget.
 
-* [ ] The widget must display stock price data fetched from the endpoint within the last 1 minute.
+* [X] The widget must display stock price data fetched from the endpoint within the last 1 minute.
 
 * [ ] The plugin must use the administrator-provided API key to generate a signed hash for its requests to the endpoint (the endpoint will not return data without it).
 
 * [ ] The plugin must handle any possible response from the endpoint gracefully, and may not display error messages, inaccurate information, or broken markup due to not having valid data to show.
 
-* [ ] Both the administrator configuration form and the public widget display must use properly formatted, semantic HTML5 to render form elements and fetched data.
+* [X] Both the administrator configuration form and the public widget display must use properly formatted, semantic HTML5 to render form elements and fetched data.
 
 **DOCUMENTATION**
 

@@ -7,7 +7,42 @@ Version: 0.1
 Author: Ishtyaq Habib
 License: GNU General Public Licenese
 */
+?>
+<style>
+    .stock {
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-pack: justify;
+  -webkit-justify-content: space-between;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+  -webkit-box-align: center;
+  -webkit-align-items: center;
+  -ms-flex-align: center;
+  align-items: center;
+}
 
+.price {
+  -webkit-box-flex: 1;
+  -webkit-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+  margin-right: 5px;
+  text-align: right;
+}
+
+.change {
+  padding: 5px 10px;
+  border-radius: 5px;
+  background-color: #dd4b39;
+  color: #fff;
+  text-align: center;
+}
+
+</style>
+<?php
 class AI_Fake_Stocks extends WP_Widget {
 
 	/**
@@ -36,7 +71,11 @@ class AI_Fake_Stocks extends WP_Widget {
         if ( ! empty( $title ) ) {
             echo $args['before_title'] . $title . $args['after_title'];
         }
-            echo '<pre>'; print_r( $symbols ); echo '</pre>';
+        
+        foreach ($symbols as $stock) {
+            echo '<div class="stock"><p class="ticker">' . $stock[0] . '</p><p class="price">' . $stock[1] .
+                '</p><p class="change">' . round(100*$stock[2]/($stock[1]-$stock[2]),2) . '%</p></div>';
+        }
         echo $args['after_widget'];
         
 	}
@@ -120,12 +159,13 @@ function get_quotes($str_symbols, $number) {
     }
     
     $results = []; //empty array for data
-    for ($i = 0; $i <= $NUMBER; $i++) {
+    for ($i = 0; $i < $number; $i++) {
         $request = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20csv%20where%20url%3D'" .
          "http%3A%2F%2Fdownload.finance.yahoo.com%2Fd%2Fquotes.csv%3Fs%3D" . $symbols[$i]  ."%26f%3Dsl1d1t1c1ohgv%26e%3D.csv'" .
          "%20and%20columns%3D'symbol%2Cprice%2Cdate%2Ctime%2Cchange%2Ccol1%2Chigh%2Clow%2Ccol2'&format=json&env=store%3A%2F%2Fdatatables.org" .
          "%2Falltableswithkeys";
-         $response = wp_remote_get( $request );
+         $response = wp_remote_get( $request ); // NEEDS TO BE ASYNCH IT SLOWS EVERYTHING DOWN!
+         print_r($i);
          if( is_array($response) ) { //Error Handling
             $header = $response['headers']; // array of http header lines
             $body = $response['body']; // use the content
