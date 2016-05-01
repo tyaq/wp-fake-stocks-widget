@@ -20,7 +20,7 @@ The following requirements apply to the plugin:
 
 * [ ] The plugin must use the administrator-provided API key to generate a signed hash for its requests to the endpoint (the endpoint will not return data without it).
 
-* [ ] The plugin must handle any possible response from the endpoint gracefully, and may not display error messages, inaccurate information, or broken markup due to not having valid data to show.
+* [X] The plugin must handle any possible response from the endpoint gracefully, and may not display error messages, inaccurate information, or broken markup due to not having valid data to show.
 
 * [X] Both the administrator configuration form and the public widget display must use properly formatted, semantic HTML5 to render form elements and fetched data.
 

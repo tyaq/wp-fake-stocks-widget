@@ -23,7 +23,9 @@ License: GNU General Public Licenese
   -ms-flex-align: center;
   align-items: center;
 }
-
+.ticker {
+    font-weight:bold;
+}
 .price {
   -webkit-box-flex: 1;
   -webkit-flex: 1;
@@ -36,7 +38,7 @@ License: GNU General Public Licenese
 .change {
   padding: 5px 10px;
   border-radius: 5px;
-  background-color: #dd4b39;
+  background-color: #fc3d39;
   color: #fff;
   text-align: center;
 }
@@ -73,8 +75,12 @@ class AI_Fake_Stocks extends WP_Widget {
         }
         
         foreach ($symbols as $stock) {
-            echo '<div class="stock"><p class="ticker">' . $stock[0] . '</p><p class="price">' . $stock[1] .
-                '</p><p class="change">' . round(100*$stock[2]/($stock[1]-$stock[2]),2) . '%</p></div>';
+            if (!empty($stock)){ // Error Handling
+                echo '<div class="stock"><p class="ticker">' . $stock[0] . '</p><p class="price">' . $stock[1] .
+                      '</p><p class="change" style="';
+                if($stock[2]>0){echo 'background-color:#53d769;';}
+                echo '">' . round(100*$stock[2]/($stock[1]-$stock[2]),2) . '%</p></div>';
+            }
         }
         echo $args['after_widget'];
         
@@ -160,20 +166,22 @@ function get_quotes($str_symbols, $number) {
     
     $results = []; //empty array for data
     for ($i = 0; $i < $number; $i++) {
-        $request = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20csv%20where%20url%3D'" .
-         "http%3A%2F%2Fdownload.finance.yahoo.com%2Fd%2Fquotes.csv%3Fs%3D" . $symbols[$i]  ."%26f%3Dsl1d1t1c1ohgv%26e%3D.csv'" .
-         "%20and%20columns%3D'symbol%2Cprice%2Cdate%2Ctime%2Cchange%2Ccol1%2Chigh%2Clow%2Ccol2'&format=json&env=store%3A%2F%2Fdatatables.org" .
-         "%2Falltableswithkeys";
-         $response = wp_remote_get( $request ); // NEEDS TO BE ASYNCH IT SLOWS EVERYTHING DOWN!
-         print_r($i);
-         if( is_array($response) ) { //Error Handling
-            $header = $response['headers']; // array of http header lines
-            $body = $response['body']; // use the content
-            $json = json_decode($body);
-            $results["$i"] = [$json->{'query'}->{'results'}->{'row'}->{'symbol'},$json->{'query'}->{'results'}->{'row'}->{'price'},$json->{'query'}->{'results'}->{'row'}->{'change'}];
-          } else {
-            $results["$i"] = 'error';
-          }
+        if ( false === ( $results["$i"] = get_transient( $symbols[$i] ) ) ) {
+        // It wasn't there, so regenerate the data and save the transient
+            $request = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20csv%20where%20url%3D'" .
+            "http%3A%2F%2Fdownload.finance.yahoo.com%2Fd%2Fquotes.csv%3Fs%3D" . $symbols[$i]  ."%26f%3Dsl1d1t1c1ohgv%26e%3D.csv'" .
+            "%20and%20columns%3D'symbol%2Cprice%2Cdate%2Ctime%2Cchange%2Ccol1%2Chigh%2Clow%2Ccol2'&format=json&env=store%3A%2F%2Fdatatables.org" .
+            "%2Falltableswithkeys";
+            $response = wp_remote_get( $request ); // NEEDS TO BE ASYNCH IT SLOWS EVERYTHING DOWN!
+            
+            if( is_array($response) ) { //Error Handling
+                $header = $response['headers']; // array of http header lines
+                $body = $response['body']; // use the content
+                $json = json_decode($body);
+                $results["$i"] = [$json->{'query'}->{'results'}->{'row'}->{'symbol'},$json->{'query'}->{'results'}->{'row'}->{'price'},$json->{'query'}->{'results'}->{'row'}->{'change'}];
+                set_transient( $symbols[$i], $results[$i], 1 * MINUTE_IN_SECONDS );
+            } 
+        }
     }
     return $results;
     
