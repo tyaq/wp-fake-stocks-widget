@@ -7,44 +7,7 @@ Version: 0.1
 Author: Ishtyaq Habib
 License: GNU General Public Licenese
 */
-?>
-<style>
-    .stock {
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-pack: justify;
-  -webkit-justify-content: space-between;
-  -ms-flex-pack: justify;
-  justify-content: space-between;
-  -webkit-box-align: center;
-  -webkit-align-items: center;
-  -ms-flex-align: center;
-  align-items: center;
-}
-.ticker {
-    font-weight:bold;
-}
-.price {
-  -webkit-box-flex: 1;
-  -webkit-flex: 1;
-  -ms-flex: 1;
-  flex: 1;
-  margin-right: 5px;
-  text-align: right;
-}
 
-.change {
-  padding: 5px 10px;
-  border-radius: 5px;
-  background-color: #fc3d39;
-  color: #fff;
-  text-align: center;
-}
-
-</style>
-<?php
 class AI_Fake_Stocks extends WP_Widget {
 
 	/**
@@ -56,6 +19,8 @@ class AI_Fake_Stocks extends WP_Widget {
 			'description' => 'A widget that provides fake stock quotes.',
 		);
 		parent::__construct( 'fake_stocks', 'Fake Stock Quotes', $widget_ops );
+        // Register style sheet.
+		add_action( 'wp_enqueue_scripts', array( $this, 'register_plugin_styles' ) );
 	}
 
 	/**
@@ -111,7 +76,7 @@ class AI_Fake_Stocks extends WP_Widget {
         if ( isset( $instance['symbols'] ) ) {
             $symbols = $instance['symbols'];   
         } else {
-            $symbols = 'AAPL, MSFT, INTC, GILD, AAL';
+            $symbols = 'AAPL, MSFT, XOM, INTC, GILD, AAL';
         }
         
          //Widget Title Field
@@ -148,6 +113,14 @@ class AI_Fake_Stocks extends WP_Widget {
         $instance['number'] = sanitize_text_field( $new_instance['number'] );
         $instance['symbols'] = sanitize_text_field( $new_instance['symbols'] );
         return $instance;
+	}
+    
+    /**
+	 * Register and enqueue style sheet.
+	 */
+	public function register_plugin_styles() {
+		wp_register_style( 'fake-stocks', plugins_url( 'ai-fake-stocks/css/fake-stocks.css' ) );
+		wp_enqueue_style( 'fake-stocks' );
 	}
     
 }
