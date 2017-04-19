@@ -1,4 +1,4 @@
-# test_project_ish
+# Fake Stocks Widget
 Fake Stocks is a Wordpress widget that provides fake stock quotes.  
 
 This uses an API provides fake, but realistic-looking stock quotes that assumes the NASDAQ will continue to grow at its historical average rate of 9.13% per year. Do not confuse this for a real stock quotes; you will be sorely disappointed.
@@ -27,4 +27,4 @@ This uses an API provides fake, but realistic-looking stock quotes that assumes 
 ### Widget Theming Guide
 
 This widget is vary simple and easy to restyle. The HTML structure of a stock ticker is simply a div that is holding the stock ticker symbol, price, and %change in a flex box. The ticker can be restyled with the `.fake-stocks .stock` class. The data can be restyled with the `.fake-stocks .ticker`, `.fake-stocks .price`, and `.fake-stocks .change` classes receptively.
-![Screenshot with theme structure](https://raw.githubusercontent.com/alleyinteractive/test_project_ish/master/theme-screenshot.png?token=ADTBzXRwN4yOBb7igt7udhnbLQnBHAYrks5XMkcGwA==)
+![Screenshot with theme structure](https://github.com/tyaq/wp-fake-stocks-widget/blob/master/theme-screenshot.png?raw=true)
