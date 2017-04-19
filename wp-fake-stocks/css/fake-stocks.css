@@ -29,7 +29,11 @@
 .fake_stocks .change {
 	padding: 5px 10px;
 	border-radius: 5px;
-	background-color: #fc3d39;
+	background-color: #fc535d;
 	color: #fff;
 	text-align: center;
+}
+
+.fake_stocks .change.positive{
+	background-color:#53d769;
 }

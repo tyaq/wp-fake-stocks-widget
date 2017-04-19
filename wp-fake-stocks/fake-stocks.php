@@ -1,14 +1,15 @@
 <?php 
 /*
 Plugin Name: Fake Stocks Quotes
-Plugin URI: https://github.com/alleyinteractive/test_project_ish
+Plugin URI: https://github.com/tyaq/wp-fake-stocks-widget
 Description: A widget that provides fake stock quotes.
 Version: 0.1
 Author: Ishtyaq Habib
+Author URI: https://github.com/tyaq/
 License: GNU General Public Licenese
 */
 
-class AI_Fake_Stocks extends WP_Widget {
+class Fake_Stocks extends WP_Widget {
 
 	/**
 	 * Sets up the widgets name etc
@@ -19,7 +20,7 @@ class AI_Fake_Stocks extends WP_Widget {
 			'description' => 'A widget that provides fake stock quotes.',
 		);
 		parent::__construct( 'fake_stocks', 'Fake Stock Quotes', $widget_ops );
-        // Register style sheet.
+		// Register style sheet.
 		add_action( 'wp_enqueue_scripts', array( $this, 'register_plugin_styles' ) );
 	}
 
@@ -31,22 +32,25 @@ class AI_Fake_Stocks extends WP_Widget {
 	 */
 	public function widget( $args, $instance ) {
 		// outputs the content of the widget
-        $title = apply_filters( 'widget_title', $instance['title'] );
-        $symbols = get_quotes($instance['symbols'],$instance['number']);
+		$title = apply_filters( 'widget_title', $instance['title'] );
+        $symbols = get_quotes( $instance['symbols'], $instance['number'], $instance['api_key'] );
         
         echo $args['before_widget'];
-        if ( ! empty( $title ) ) {
+        if ( !empty( $title ) ) {
             echo $args['before_title'] . $title . $args['after_title'];
         }
         
-        foreach ($symbols as $stock) {
-            if (!empty($stock)){ // Error Handling
-                echo '<div class="stock"><p class="ticker">' . $stock[0] . '</p><p class="price">' . $stock[1] .
-                      '</p><p class="change" style="';
-                if($stock[2]>0){echo 'background-color:#53d769;';}
-                echo '">' . round(100*$stock[2]/($stock[1]-$stock[2]),2) . '%</p></div>';
+        if ( !empty( $symbols ) ) {
+            foreach ( $symbols as $stock ) {
+                if ( !empty($stock) && round($stock[1],2 ) != 0) { // Error Handling
+                    echo '<div class="stock"><p class="ticker" title="' . $stock[3] . '">' . $stock[0] .
+                     '</p><p class="price">' . round($stock[1],2) . '</p><p class="change';
+                    if( $stock[2]>0) {echo ' positive';}
+                    echo '">' . round(100*$stock[2]/($stock[1]-$stock[2]),2) . '%</p></div>';
+                }
             }
         }
+        
         echo $args['after_widget'];
         
 	}
@@ -58,7 +62,7 @@ class AI_Fake_Stocks extends WP_Widget {
 	 */
 	public function form( $instance ) {
 		// outputs the options form on admin
-        if ( isset( $instance['title'] ) ) {
+		if ( isset( $instance['title'] ) ) {
             $title = $instance['title'];   
         } else {
             $title = 'Stock Quotes';
@@ -76,7 +80,7 @@ class AI_Fake_Stocks extends WP_Widget {
         if ( isset( $instance['symbols'] ) ) {
             $symbols = $instance['symbols'];   
         } else {
-            $symbols = 'AAPL, MSFT, XOM, INTC, GILD, AAL';
+            $symbols = 'MSFT, ARAY, COKE, AMGN, BIIB';
         }
         
          //Widget Title Field
@@ -111,49 +115,65 @@ class AI_Fake_Stocks extends WP_Widget {
         $instance['title'] = sanitize_text_field( $new_instance['title'] );
         $instance['api_key'] = sanitize_text_field( $new_instance['api_key'] );
         $instance['number'] = sanitize_text_field( $new_instance['number'] );
-        $instance['symbols'] = sanitize_text_field( $new_instance['symbols'] );
+        $instance['symbols'] = strtoupper ( sanitize_text_field( $new_instance['symbols'] ) );
         return $instance;
+
 	}
-    
-    /**
+
+	/**
 	 * Register and enqueue style sheet.
 	 */
 	public function register_plugin_styles() {
 		wp_register_style( 'fake-stocks', plugins_url( 'ai-fake-stocks/css/fake-stocks.css' ) );
 		wp_enqueue_style( 'fake-stocks' );
 	}
-    
 }
 
 /**
  * Requests ticker data from api
  *
  * @param string $str_symbols The admin's symbol list
+ * @param int $number The admin's number of stocks to show
+ * @param string $API_SECRET The admin's API key
  */
-function get_quotes($str_symbols, $number) {
+function get_quotes($str_symbols, $number, $API_SECRET) {
     //Requests ticker data from api
     $symbols = parse_symbols($str_symbols);
-    if (count($symbols) < $number) { // If input stock tickers are less then input number display as many as you have
+    if (count($symbols) < $number) { // If input stock symbols are less in size then input number, then display as many as you have
         $number = count($symbols);
     }
     
     $results = []; //empty array for data
-    for ($i = 0; $i < $number; $i++) {
-        if ( false === ( $results["$i"] = get_transient( $symbols[$i] ) ) ) {
-        // It wasn't there, so regenerate the data and save the transient
-            $request = "https://query.yahooapis.com/v1/public/yql?q=select%20*%20from%20csv%20where%20url%3D'" .
-            "http%3A%2F%2Fdownload.finance.yahoo.com%2Fd%2Fquotes.csv%3Fs%3D" . $symbols[$i]  ."%26f%3Dsl1d1t1c1ohgv%26e%3D.csv'" .
-            "%20and%20columns%3D'symbol%2Cprice%2Cdate%2Ctime%2Cchange%2Ccol1%2Chigh%2Clow%2Ccol2'&format=json&env=store%3A%2F%2Fdatatables.org" .
-            "%2Falltableswithkeys";
-            $response = wp_remote_get( $request ); // NEEDS TO BE ASYNCH IT SLOWS EVERYTHING DOWN!
+    for ( $i = 0; $i < $number; $i++ ) {
+        
+        if ( false === ( $results[ $i ] = get_transient( $symbols[ $i ] ) ) ) {
+            // It wasn't there, so regenerate the data and save the transient
             
-            if( is_array($response) ) { //Error Handling
+            // Alley Interactive API
+            $time = time();
+            $sig = md5( "$API_SECRET" . 'quote' . "$symbols[$i]" . "$time" );
+            $request = "http://apidemo.alley.ws/api.php?action=quote&symbol=$symbols[$i]&time=$time&signature=$sig";
+            
+            $response = wp_remote_get( $request ); // This is the slowest part, it should be made asynchronously
+
+            if( is_array($response)) { //Error Handling
                 $header = $response['headers']; // array of http header lines
                 $body = $response['body']; // use the content
                 $json = json_decode($body);
-                $results["$i"] = [$json->{'query'}->{'results'}->{'row'}->{'symbol'},$json->{'query'}->{'results'}->{'row'}->{'price'},$json->{'query'}->{'results'}->{'row'}->{'change'}];
-                set_transient( $symbols[$i], $results[$i], 1 * MINUTE_IN_SECONDS );
+                if ($json != false) { //Bad server message
+                    
+                    if ($json->{'error'} === 0) { //Error Handling for bad requests
+                    // Alley Interactive API // $results[$i] = [symbol, price, change];
+                        $start = $json->{'data'}->{'starting_price'};
+                        $price = $json->{'data'}->{'current_price'};
+                        $name = $json->{'data'}->{'name'};
+                        $results[ $i ] = [$symbols[ $i ], $price, ($start-$price), $name];
+                        set_transient( $symbols[ $i ], $results[ $i ] , 1 * MINUTE_IN_SECONDS ); // Set 1 min Cache
+                    }
+                }
             } 
+        } else {
+            $results[ $i ] = get_transient( $symbols[$i] );
         }
     }
     return $results;
@@ -165,12 +185,12 @@ function get_quotes($str_symbols, $number) {
  *
  * @param string $str_symbols The admin's symbol list
  */
-function parse_symbols($str_symbols) {
+function parse_symbols( $str_symbols ) {
     //Parses admin forms symbols string into array of ticker symbols
-    return preg_split("/[^a-z^A-Z]+/", $str_symbols);
+    return preg_split( "/[^a-z^A-Z]+/", $str_symbols );
  }
 
 add_action( 'widgets_init', function(){
-	register_widget( 'AI_Fake_Stocks' );
+	register_widget( 'Fake_Stocks' );
 });
 ?>
